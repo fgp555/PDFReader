@@ -1,0 +1,418 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Semantic color tokens -->
+    <SolidColorBrush x:Key="WpfUi.AppChrome" Color="#202324" />
+    <SolidColorBrush x:Key="WpfUi.Workspace" Color="#191B1C" />
+    <SolidColorBrush x:Key="WpfUi.Panel" Color="#1B1D1E" />
+    <SolidColorBrush x:Key="WpfUi.Dialog" Color="#212121" />
+    <SolidColorBrush x:Key="WpfUi.Control" Color="#2B2B2B" />
+    <SolidColorBrush x:Key="WpfUi.ControlHover" Color="#343739" />
+    <SolidColorBrush x:Key="WpfUi.Selected" Color="#343637" />
+    <SolidColorBrush x:Key="WpfUi.Border" Color="#3E4244" />
+    <SolidColorBrush x:Key="WpfUi.BorderStrong" Color="#525252" />
+    <SolidColorBrush x:Key="WpfUi.Text" Color="#EEEEEE" />
+    <SolidColorBrush x:Key="WpfUi.TextSecondary" Color="#CCCCCC" />
+    <SolidColorBrush x:Key="WpfUi.TextMuted" Color="#A5A9AB" />
+    <SolidColorBrush x:Key="WpfUi.Focus" Color="#0098D8" />
+    <SolidColorBrush x:Key="WpfUi.Danger" Color="#BD2638" />
+    <SolidColorBrush x:Key="WpfUi.ErrorSurface" Color="#3B2327" />
+    <SolidColorBrush x:Key="WpfUi.ErrorText" Color="#FFCDD2" />
+
+    <!-- Shell surfaces -->
+    <Style x:Key="WpfUi.WorkspaceSurface" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Workspace}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.Border}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style x:Key="WpfUi.PanelSurface" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Panel}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.Border}" />
+    </Style>
+    <Style x:Key="WpfUi.DialogSurface" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Dialog}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.BorderStrong}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style x:Key="WpfUi.StatusSurface" TargetType="Border">
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Background" Value="{DynamicResource WpfUi.AppChrome}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.Border}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="10,0" />
+    </Style>
+    <Style x:Key="WpfUi.ErrorSurfaceStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.ErrorSurface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.Danger}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="8" />
+    </Style>
+
+    <!-- Typography and windows -->
+    <Style x:Key="WpfUi.Window" TargetType="Window">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.AppChrome}" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+    </Style>
+    <Style TargetType="Window" BasedOn="{StaticResource WpfUi.Window}" />
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+    </Style>
+    <Style x:Key="WpfUi.SecondaryText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.TextSecondary}" />
+    </Style>
+    <Style x:Key="WpfUi.MutedText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.TextMuted}" />
+    </Style>
+    <Style x:Key="WpfUi.ErrorTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.ErrorText}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style x:Key="WpfUi.Icon" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="Focusable" Value="False" />
+    </Style>
+
+    <!-- Buttons -->
+    <Style TargetType="Button">
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Control}" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.BorderStrong}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Surface" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource WpfUi.ControlHover}" /></Trigger>
+                        <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource WpfUi.Selected}" /></Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource WpfUi.Focus}" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="WpfUi.PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Focus}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.Focus}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="WpfUi.IconButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.TextSecondary}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style x:Key="WpfUi.DangerIconButton" TargetType="Button" BasedOn="{StaticResource WpfUi.IconButton}">
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource WpfUi.Danger}" />
+                <Setter Property="Foreground" Value="White" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="WpfUi.TitleBarIconButton" TargetType="Button" BasedOn="{StaticResource WpfUi.IconButton}">
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="MinHeight" Value="36" />
+    </Style>
+    <Style x:Key="WpfUi.CaptionButton" TargetType="Button" BasedOn="{StaticResource WpfUi.TitleBarIconButton}">
+        <Setter Property="Width" Value="46" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style x:Key="WpfUi.CloseCaptionButton" TargetType="Button" BasedOn="{StaticResource WpfUi.CaptionButton}">
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource WpfUi.Danger}" />
+                <Setter Property="Foreground" Value="White" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="WpfUi.FooterIconButton" TargetType="Button" BasedOn="{StaticResource WpfUi.IconButton}">
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <!-- Menus and popups -->
+    <Style TargetType="Menu">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.AppChrome}" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="4,0" />
+    </Style>
+    <Style TargetType="MenuItem">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Grid>
+                        <Border x:Name="ItemSurface" Background="{TemplateBinding Background}" CornerRadius="3" />
+                        <Grid Margin="{TemplateBinding Padding}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid x:Name="LeadingVisual" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <ContentPresenter x:Name="Icon" ContentSource="Icon" />
+                                <TextBlock x:Name="CheckGlyph" Text="&#xE73E;" Style="{StaticResource WpfUi.Icon}"
+                                           FontSize="12" Visibility="Collapsed" />
+                            </Grid>
+                            <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center" />
+                            <TextBlock x:Name="GestureText" Grid.Column="2" Text="{TemplateBinding InputGestureText}" Foreground="{DynamicResource WpfUi.TextMuted}" Margin="24,0,8,0" VerticalAlignment="Center" />
+                            <Path x:Name="Arrow" Grid.Column="3" Data="M 0 0 L 4 4 L 0 8" Stroke="{DynamicResource WpfUi.TextSecondary}" StrokeThickness="1.5" Visibility="Collapsed" VerticalAlignment="Center" />
+                        </Grid>
+                        <Popup x:Name="PART_Popup" Placement="Right" IsOpen="{TemplateBinding IsSubmenuOpen}"
+                               AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                            <Border Background="{DynamicResource WpfUi.Dialog}" BorderBrush="{DynamicResource WpfUi.BorderStrong}"
+                                    BorderThickness="1" CornerRadius="4" Padding="4" MinWidth="160">
+                                <ScrollViewer CanContentScroll="True"><ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" /></ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Role" Value="TopLevelHeader">
+                            <Setter TargetName="PART_Popup" Property="Placement" Value="Bottom" />
+                            <Setter TargetName="LeadingVisual" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="GestureText" Property="Visibility" Value="Collapsed" />
+                            <Setter Property="Padding" Value="8,4" />
+                        </Trigger>
+                        <Trigger Property="Role" Value="SubmenuHeader"><Setter TargetName="Arrow" Property="Visibility" Value="Visible" /></Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Icon" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="CheckGlyph" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="ItemSurface" Property="Background" Value="{DynamicResource WpfUi.ControlHover}" /></Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ItemSurface" Property="BorderBrush" Value="{DynamicResource WpfUi.Focus}" /><Setter TargetName="ItemSurface" Property="BorderThickness" Value="1" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="ContextMenu">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Dialog}" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.BorderStrong}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="4" />
+    </Style>
+
+    <!-- Lists -->
+    <Style TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+        <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+    </Style>
+    <Style TargetType="ListBoxItem">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="10,8" />
+        <Setter Property="Margin" Value="0,1" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Row" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Row" Property="Background" Value="{DynamicResource WpfUi.ControlHover}" /></Trigger>
+                        <Trigger Property="IsSelected" Value="True"><Setter TargetName="Row" Property="Background" Value="{DynamicResource WpfUi.Selected}" /><Setter Property="Foreground" Value="White" /></Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource WpfUi.Focus}" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Inputs and status controls -->
+    <Style TargetType="TextBox">
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Control}" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.BorderStrong}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource WpfUi.Focus}" />
+    </Style>
+    <Style x:Key="WpfUi.PageNumberBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="Width" Value="42" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="MinHeight" Value="28" />
+        <Setter Property="Padding" Value="4,2" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="WpfUi.FooterPageNumberBox" TargetType="TextBox" BasedOn="{StaticResource WpfUi.PageNumberBox}">
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Height" Value="24" />
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="Padding" Value="2,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style TargetType="ComboBox">
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Control}" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.BorderStrong}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <Border x:Name="ComboSurface" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4" />
+                        <ToggleButton Background="Transparent" BorderThickness="0" Focusable="False"
+                                      IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                            <ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="Transparent" /></ControlTemplate></ToggleButton.Template>
+                        </ToggleButton>
+                        <ContentPresenter x:Name="ContentSite" Margin="8,5,30,5"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                          VerticalAlignment="Center" IsHitTestVisible="False" />
+                        <TextBox x:Name="PART_EditableTextBox" Visibility="Hidden" Background="Transparent" BorderThickness="0"
+                                 Foreground="{TemplateBinding Foreground}" CaretBrush="{DynamicResource WpfUi.Text}"
+                                 Margin="8,3,30,3" VerticalContentAlignment="Center" />
+                        <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE70D;"
+                                   Foreground="{DynamicResource WpfUi.TextSecondary}" FontSize="12"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
+                                   IsHitTestVisible="False" />
+                        <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
+                               AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                            <Border Background="{DynamicResource WpfUi.Dialog}" BorderBrush="{DynamicResource WpfUi.BorderStrong}"
+                                    BorderThickness="1" CornerRadius="4" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ScrollViewer MaxHeight="260" CanContentScroll="True"><ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" /></ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="ComboSurface" Property="BorderBrush" Value="{DynamicResource WpfUi.Focus}" /></Trigger>
+                        <Trigger Property="IsEditable" Value="True"><Setter TargetName="ContentSite" Property="Visibility" Value="Hidden" /><Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="ComboBoxItem">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Dialog}" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="Padding" Value="8,6" />
+    </Style>
+    <Style TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style TargetType="ProgressBar">
+        <Setter Property="Height" Value="4" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Focus}" />
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Control}" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style TargetType="StatusBar">
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="Background" Value="{DynamicResource WpfUi.AppChrome}" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.TextSecondary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.Border}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+    </Style>
+    <Style TargetType="Separator">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Border}" />
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Separator"><Border Height="1" Background="{TemplateBinding Background}" /></ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="{DynamicResource WpfUi.Dialog}" />
+        <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WpfUi.BorderStrong}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="8,5" />
+    </Style>
+
+    <!-- Slim scrollbars retain native Track, dragging, paging, wheel, and keyboard behavior. -->
+    <Style TargetType="ScrollBar">
+        <Setter Property="Width" Value="10" />
+        <Setter Property="Height" Value="Auto" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid Background="Transparent">
+                        <Track x:Name="PART_Track" Orientation="{TemplateBinding Orientation}" IsDirectionReversed="True">
+                            <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False" /></Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb MinHeight="24" MinWidth="24">
+                                    <Thumb.Template><ControlTemplate TargetType="Thumb"><Border x:Name="ThumbBody" Background="#80525252" CornerRadius="3" Margin="2" /><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ThumbBody" Property="Background" Value="#B0777777" /></Trigger><Trigger Property="IsDragging" Value="True"><Setter TargetName="ThumbBody" Property="Background" Value="#D0909090" /></Trigger></ControlTemplate.Triggers></ControlTemplate></Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False" /></Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Orientation" Value="Horizontal">
+                            <Setter Property="Width" Value="Auto" />
+                            <Setter Property="Height" Value="10" />
+                            <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

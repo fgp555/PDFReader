@@ -1,144 +1,241 @@
 <Window x:Class="PDFReader.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-        Title="Lector PDF" Height="760" Width="1200" MinHeight="560" MinWidth="820"
-        Background="{DynamicResource WindowBackgroundBrush}"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Lector PDF" Icon="Assets/PDFReader.ico" Height="760" Width="480" MinHeight="420" MinWidth="360"
+        Style="{StaticResource WpfUi.Window}" WindowStyle="None" ResizeMode="CanResize"
         AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver"
-        PreviewKeyDown="Window_PreviewKeyDown">
+        PreviewKeyDown="Window_PreviewKeyDown" StateChanged="Window_StateChanged" Closing="Window_Closing"
+        SourceInitialized="Window_SourceInitialized">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="6" CornerRadius="8"
+                            GlassFrameThickness="0" UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="56" />
+            <RowDefinition x:Name="TitleBarRow" Height="40" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="28" />
+            <RowDefinition x:Name="FooterRow" Height="28" />
         </Grid.RowDefinitions>
-
-        <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-            <Grid Margin="16,0">
+        <Border Grid.Row="0" Background="{DynamicResource WpfUi.AppChrome}"
+                BorderBrush="{DynamicResource WpfUi.Border}" BorderThickness="0,0,0,1">
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="12" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Style="{StaticResource PrimaryButtonStyle}"
-                        Click="OpenButton_Click" AutomationProperties.Name="Abrir archivo PDF"
-                        ToolTip="Abrir PDF (Ctrl+O)">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Foreground="White"
-                                   FontSize="16" Text="&#xE8E5;" Margin="0,0,8,0" />
-                        <TextBlock Foreground="White" Text="Abrir PDF" />
-                    </StackPanel>
-                </Button>
-                <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                    <TextBlock x:Name="DocumentTitle" Text="Lector PDF" FontSize="15" FontWeight="SemiBold"
-                               TextTrimming="CharacterEllipsis" />
-                    <TextBlock x:Name="DocumentPath" Text="Abre un documento para comenzar" FontSize="12"
-                               Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" />
-                </StackPanel>
-                <StackPanel Grid.Column="3" Orientation="Horizontal">
-                    <Button x:Name="BackButton" Style="{StaticResource IconButtonStyle}" Content="&#xE72B;"
-                            IsEnabled="False" Click="BackButton_Click" Margin="0,0,8,0"
-                            AutomationProperties.Name="Documento anterior" ToolTip="Documento anterior (Alt+Izquierda)" />
-                    <Button x:Name="ForwardButton" Style="{StaticResource IconButtonStyle}" Content="&#xE72A;"
-                            IsEnabled="False" Click="ForwardButton_Click"
-                            AutomationProperties.Name="Documento siguiente" ToolTip="Documento siguiente (Alt+Derecha)" />
+                <Menu Grid.Column="0" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <MenuItem Header="_Archivo">
+                        <MenuItem Header="_Nueva ventana" InputGestureText="Ctrl+N" Click="NewWindowMenuItem_Click" />
+                        <MenuItem Header="_Abrir PDF…" InputGestureText="Ctrl+O" Click="OpenButton_Click" />
+                        <MenuItem Header="_Guardar como…" InputGestureText="Ctrl+Shift+S" Click="SaveAsMenuItem_Click" />
+                        <MenuItem x:Name="RecentFilesMenu" Header="Archivos _recientes" />
+                        <Separator />
+                        <MenuItem Header="_Imprimir…" InputGestureText="Ctrl+P" Click="PrintMenuItem_Click" />
+                        <MenuItem Header="Mostrar en el _Explorador" Click="ShowInExplorerMenuItem_Click" />
+                        <MenuItem Header="_Propiedades" Click="PropertiesMenuItem_Click" />
+                        <MenuItem Header="_Configuración…" Click="SettingsMenuItem_Click" />
+                        <Separator /><MenuItem Header="_Salir" Click="ExitMenuItem_Click" />
+                    </MenuItem>
+                    <MenuItem Header="_Ver">
+                        <MenuItem Header="PDF _anterior" InputGestureText="Ctrl+Page Up" Click="PreviousPdfButton_Click" />
+                        <MenuItem Header="PDF _siguiente" InputGestureText="Ctrl+Page Down" Click="NextPdfButton_Click" />
+                        <Separator />
+                        <MenuItem Header="Página anterior" Click="PreviousPageButton_Click" />
+                        <MenuItem Header="Página siguiente" Click="NextPageButton_Click" />
+                        <Separator />
+                        <MenuItem Header="_Buscar…" InputGestureText="Ctrl+F" Click="FindMenuItem_Click" />
+                        <MenuItem Header="_Acercar" InputGestureText="Ctrl++" Click="ZoomInMenuItem_Click" />
+                        <MenuItem Header="A_lejar" InputGestureText="Ctrl+-" Click="ZoomOutMenuItem_Click" />
+                        <MenuItem Header="Ajustar al _ancho" InputGestureText="Ctrl+0" Click="FitWidthMenuItem_Click" />
+                        <Separator />
+                        <MenuItem Header="Rotar a la _izquierda" Click="RotateLeftMenuItem_Click" />
+                        <MenuItem Header="Rotar a la _derecha" Click="RotateRightMenuItem_Click" />
+                    </MenuItem>
+                    <MenuItem Header="A_yuda"><MenuItem Header="Atajos de _teclado" Click="ShortcutsMenuItem_Click" /></MenuItem>
+                </Menu>
+                <Grid Grid.Column="1" Background="Transparent" MouseLeftButtonDown="TitleRegion_MouseLeftButtonDown"
+                      MouseRightButtonUp="TitleRegion_MouseRightButtonUp">
+                    <TextBlock x:Name="DocumentTitle" Text="Lector PDF" FontSize="12" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="12,0" />
+                </Grid>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Style="{StaticResource WpfUi.CaptionButton}" Click="MinimizeButton_Click"
+                            AutomationProperties.Name="Minimizar" ToolTip="Minimizar">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE921;" FontSize="10" />
+                    </Button>
+                    <Button Style="{StaticResource WpfUi.CaptionButton}" Click="MaximizeRestoreButton_Click"
+                            AutomationProperties.Name="Maximizar o restaurar" ToolTip="Maximizar o restaurar">
+                        <TextBlock x:Name="MaximizeGlyph" Style="{StaticResource WpfUi.Icon}" Text="&#xE922;" FontSize="10" />
+                    </Button>
+                    <Button Style="{StaticResource WpfUi.CloseCaptionButton}" Click="CloseButton_Click"
+                            AutomationProperties.Name="Cerrar" ToolTip="Cerrar">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE8BB;" FontSize="10" />
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
-
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250" MinWidth="210" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
-                <DockPanel Margin="16">
-                    <TextBlock DockPanel.Dock="Top" Text="RECIENTES" FontSize="11" FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextMutedBrush}" Margin="4,4,0,12" />
-                    <ListBox x:Name="RecentFilesList" ItemsSource="{Binding RecentFiles}"
-                             BorderThickness="0" Background="Transparent"
-                             SelectionChanged="RecentFilesList_SelectionChanged"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Setter Property="Padding" Value="0" />
-                                <Setter Property="Margin" Value="0,0,0,6" />
-                                <Setter Property="Background" Value="Transparent" />
-                                <Setter Property="BorderThickness" Value="0" />
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Border Padding="10" CornerRadius="7" Background="{DynamicResource SurfaceMutedBrush}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="28" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="PDF" FontSize="9" FontWeight="Bold"
-                                                   Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
-                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" />
-                                            <TextBlock Text="{Binding Directory}" FontSize="11"
-                                                       Foreground="{DynamicResource TextMutedBrush}"
-                                                       TextTrimming="CharacterEllipsis" />
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </DockPanel>
-            </Border>
-
-            <Grid Grid.Column="1" Margin="12">
-                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1" CornerRadius="10" ClipToBounds="True">
-                    <Grid>
-                        <wv2:WebView2 x:Name="PdfView" NavigationCompleted="PdfView_NavigationCompleted" />
-                        <Grid x:Name="EmptyState" Background="{DynamicResource SurfaceBrush}">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="380">
-                                <Border Width="76" Height="76" CornerRadius="18" Background="#FDEBEC"
-                                        HorizontalAlignment="Center" Margin="0,0,0,20">
-                                    <TextBlock Text="PDF" Foreground="{DynamicResource AccentBrush}" FontSize="18"
-                                               FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Border>
-                                <TextBlock Text="Tu documento, listo para leer" FontSize="24" FontWeight="SemiBold"
-                                           TextAlignment="Center" Margin="0,0,0,8" />
-                                <TextBlock Text="Abre un archivo PDF o arrástralo hasta esta ventana. El visor incluye búsqueda, zoom, impresión y descarga."
-                                           FontSize="14" Foreground="{DynamicResource TextMutedBrush}"
-                                           TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,22" />
-                                <Button Style="{StaticResource PrimaryButtonStyle}" Content="Seleccionar un PDF"
-                                        HorizontalAlignment="Center" Click="OpenButton_Click" />
-                                <TextBlock Text="También puedes usar Ctrl+O" FontSize="12"
-                                           Foreground="{DynamicResource TextMutedBrush}"
-                                           HorizontalAlignment="Center" Margin="0,12,0,0" />
-                            </StackPanel>
+        <Grid Grid.Row="1" Background="{DynamicResource WpfUi.Workspace}" ClipToBounds="True">
+            <ScrollViewer x:Name="DocumentViewport" HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto" SizeChanged="DocumentViewport_SizeChanged"
+                          ScrollChanged="DocumentViewport_ScrollChanged"
+                          PreviewMouseDown="DocumentViewport_MouseDown"
+                          PreviewMouseMove="DocumentViewport_MouseMove"
+                          PreviewMouseUp="DocumentViewport_MouseUp"
+                          PreviewMouseWheel="DocumentViewport_PreviewMouseWheel"
+                          LostMouseCapture="DocumentViewport_LostMouseCapture"
+                          MouseLeave="DocumentViewport_MouseLeave">
+                <ScrollViewer.Resources>
+                    <Style TargetType="ScrollBar" BasedOn="{StaticResource {x:Type ScrollBar}}">
+                        <Setter Property="Opacity" Value="0" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsMouseCaptureWithin" Value="True">
+                                <Setter Property="Opacity" Value="1" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ScrollViewer.Resources>
+                <ScrollViewer.Template>
+                    <ControlTemplate TargetType="ScrollViewer">
+                        <Grid Background="{TemplateBinding Background}" ClipToBounds="True">
+                            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                                    Content="{TemplateBinding Content}"
+                                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                    CanContentScroll="{TemplateBinding CanContentScroll}"
+                                                    Margin="{TemplateBinding Padding}" />
+                            <ScrollBar x:Name="PART_VerticalScrollBar" Panel.ZIndex="2"
+                                       Orientation="Vertical" HorizontalAlignment="Right"
+                                       Value="{TemplateBinding VerticalOffset}"
+                                       Maximum="{TemplateBinding ScrollableHeight}"
+                                       ViewportSize="{TemplateBinding ViewportHeight}"
+                                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" />
+                            <ScrollBar x:Name="PART_HorizontalScrollBar" Panel.ZIndex="2"
+                                       Orientation="Horizontal" VerticalAlignment="Bottom"
+                                       Value="{TemplateBinding HorizontalOffset}"
+                                       Maximum="{TemplateBinding ScrollableWidth}"
+                                       ViewportSize="{TemplateBinding ViewportWidth}"
+                                       Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}" />
                         </Grid>
-                        <Border x:Name="LoadingOverlay" Visibility="Collapsed" Background="#CCFFFFFF">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <ProgressBar Width="180" Height="4" IsIndeterminate="True" />
-                                <TextBlock Text="Abriendo documento…" Margin="0,12,0,0" FontSize="13" />
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-                </Border>
+                    </ControlTemplate>
+                </ScrollViewer.Template>
+                <ScrollViewer.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="_Copiar texto" InputGestureText="Ctrl+C" Click="CopySelectedTextMenuItem_Click" />
+                    </ContextMenu>
+                </ScrollViewer.ContextMenu>
+                <StackPanel x:Name="PagesPanel" VerticalAlignment="Top" />
+            </ScrollViewer>
+            <Grid x:Name="EmptyState" Background="{DynamicResource WpfUi.Workspace}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="390" Margin="24">
+                    <Border Width="62" Height="68" CornerRadius="5" BorderBrush="{DynamicResource WpfUi.BorderStrong}"
+                            BorderThickness="1" HorizontalAlignment="Center" Margin="0,0,0,18">
+                        <TextBlock Text="PDF" Foreground="{DynamicResource PdfAccentBrush}" FontSize="15" FontWeight="Bold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock x:Name="EmptyStateTitle" Text="Abre un documento PDF" FontSize="22" FontWeight="SemiBold" TextAlignment="Center" />
+                    <TextBlock x:Name="EmptyStateDescription"
+                               Text="Selecciona un archivo o arrastra un PDF para abrirlo aquí."
+                               FontSize="13" Style="{StaticResource WpfUi.SecondaryText}" TextAlignment="Center"
+                               TextWrapping="Wrap" Margin="0,8,0,20" />
+                    <Button x:Name="EmptyStateAction" Style="{StaticResource WpfUi.PrimaryButton}" Content="Seleccionar un PDF"
+                            HorizontalAlignment="Center" Click="OpenButton_Click" AutomationProperties.Name="Seleccionar un archivo PDF" />
+                </StackPanel>
             </Grid>
+            <Border x:Name="LoadingOverlay" Visibility="Collapsed" Background="#E6191B1C">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="240">
+                    <ProgressBar Height="4" IsIndeterminate="True" />
+                    <TextBlock Text="Abriendo documento…" Margin="0,12,0,0" FontSize="12"
+                               Style="{StaticResource WpfUi.SecondaryText}" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+            <Border x:Name="FindPanel" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Top"
+                    Margin="8" Padding="6" CornerRadius="6" Background="{DynamicResource WpfUi.AppChrome}"
+                    BorderBrush="{DynamicResource WpfUi.BorderStrong}" BorderThickness="1">
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="FindTextBox" Width="220" Height="28" VerticalContentAlignment="Center"
+                             TextChanged="FindTextBox_TextChanged" PreviewKeyDown="FindTextBox_PreviewKeyDown"
+                             AutomationProperties.Name="Buscar texto" />
+                    <TextBlock x:Name="FindResultText" MinWidth="54" Margin="8,0,2,0" VerticalAlignment="Center"
+                               Style="{StaticResource WpfUi.MutedText}" TextAlignment="Center" />
+                    <Button Style="{StaticResource WpfUi.FooterIconButton}" Click="FindPreviousButton_Click" ToolTip="Coincidencia anterior">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE76B;" />
+                    </Button>
+                    <Button Style="{StaticResource WpfUi.FooterIconButton}" Click="FindNextButton_Click" ToolTip="Coincidencia siguiente">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE76C;" />
+                    </Button>
+                    <Button Style="{StaticResource WpfUi.FooterIconButton}" Click="CloseFindButton_Click" ToolTip="Cerrar búsqueda">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE8BB;" />
+                    </Button>
+                </StackPanel>
+            </Border>
         </Grid>
-
-        <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
-            <Grid Margin="16,0">
-                <TextBlock x:Name="StatusText" Text="Listo" FontSize="11"
-                           Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
-                <TextBlock Text="Ctrl+O  Abrir  ·  Ctrl+F  Buscar en el documento" FontSize="11"
-                           Foreground="{DynamicResource TextMutedBrush}"
-                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+        <Border Grid.Row="2" Height="28" Style="{StaticResource WpfUi.StatusSurface}">
+            <Grid>
+                <StackPanel x:Name="PageNavigation" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <Button x:Name="PreviousPdfButton" Style="{StaticResource WpfUi.FooterIconButton}"
+                            IsEnabled="False" Click="PreviousPdfButton_Click"
+                            AutomationProperties.Name="PDF anterior" ToolTip="PDF anterior de la carpeta">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE892;" />
+                    </Button>
+                    <TextBlock x:Name="PdfPositionText" Text="— / —" MinWidth="42"
+                               VerticalAlignment="Center" TextAlignment="Center"
+                               Style="{StaticResource WpfUi.MutedText}"
+                               AutomationProperties.Name="Posición del PDF en la carpeta" />
+                    <Button x:Name="NextPdfButton" Style="{StaticResource WpfUi.FooterIconButton}"
+                            IsEnabled="False" Click="NextPdfButton_Click"
+                            AutomationProperties.Name="PDF siguiente" ToolTip="PDF siguiente de la carpeta">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE893;" />
+                    </Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock x:Name="StatusText" Text="Listo" FontSize="11" MinWidth="78" Margin="4,0,2,0"
+                               Style="{StaticResource WpfUi.SecondaryText}" VerticalAlignment="Center"
+                               AutomationProperties.LiveSetting="Polite" />
+                    <Button x:Name="PreviousPageButton" Style="{StaticResource WpfUi.FooterIconButton}"
+                            IsEnabled="False" Click="PreviousPageButton_Click" AutomationProperties.Name="Página anterior"
+                            ToolTip="Página anterior (Page Up)">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE76B;" />
+                    </Button>
+                    <TextBox x:Name="PageNumberBox" Style="{StaticResource WpfUi.FooterPageNumberBox}" Text="—" IsEnabled="False"
+                             PreviewKeyDown="PageNumberBox_PreviewKeyDown" LostKeyboardFocus="PageNumberBox_LostKeyboardFocus"
+                             AutomationProperties.Name="Número de página" Visibility="Collapsed" />
+                    <TextBlock x:Name="PageCountText" Text="/ —" Style="{StaticResource WpfUi.MutedText}"
+                               VerticalAlignment="Center" Margin="3,0" MinWidth="24" Visibility="Collapsed" />
+                    <Button x:Name="NextPageButton" Style="{StaticResource WpfUi.FooterIconButton}"
+                            IsEnabled="False" Click="NextPageButton_Click" AutomationProperties.Name="Página siguiente"
+                            ToolTip="Página siguiente (Page Down)">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE76C;" />
+                    </Button>
+                    <Button x:Name="DeletePdfButton" Style="{StaticResource WpfUi.FooterIconButton}"
+                            IsEnabled="False" Click="DeletePdfButton_Click"
+                            AutomationProperties.Name="Eliminar PDF actual" ToolTip="Enviar PDF actual a la Papelera">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE74D;" />
+                    </Button>
+                    <TextBlock x:Name="ZoomText" Text="100%" MinWidth="38" VerticalAlignment="Center"
+                               TextAlignment="Center" Style="{StaticResource WpfUi.MutedText}" ToolTip="Zoom (Ctrl+rueda)" />
+                    <Button x:Name="SaveInternetButton" Style="{StaticResource WpfUi.FooterIconButton}"
+                            IsEnabled="False" Click="SaveInternetButton_Click"
+                            AutomationProperties.Name="Guardar PDF de Internet en Documentos"
+                            ToolTip="Guardar en Documentos (Ctrl+S)">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE74E;" />
+                    </Button>
+                    <Button x:Name="DocumentThemeButton" Style="{StaticResource WpfUi.FooterIconButton}"
+                            IsEnabled="False" Click="DocumentThemeButton_Click" AutomationProperties.Name="Cambiar modo del documento"
+                            ToolTip="Cambiar documento entre claro y oscuro">
+                        <TextBlock x:Name="DocumentThemeGlyph" Style="{StaticResource WpfUi.Icon}" Text="&#xE708;" />
+                    </Button>
+                    <Button x:Name="CopyPageButton" Style="{StaticResource WpfUi.FooterIconButton}"
+                            IsEnabled="False" Click="CopyPageButton_Click" AutomationProperties.Name="Copiar página como imagen"
+                            ToolTip="Copiar página como imagen">
+                        <TextBlock Style="{StaticResource WpfUi.Icon}" Text="&#xE8C8;" />
+                    </Button>
+                </StackPanel>
+                <TextBlock x:Name="DocumentPath" Text="Arrastra un PDF para abrirlo en otra ventana" FontSize="11"
+                           Style="{StaticResource WpfUi.MutedText}" TextTrimming="CharacterEllipsis"
+                           Visibility="Collapsed" />
             </Grid>
         </Border>
     </Grid>
