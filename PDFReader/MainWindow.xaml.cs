@@ -71,6 +71,8 @@ public partial class MainWindow : Window
     private WindowState _fullscreenRestoreState;
     private readonly Dictionary<string, int> _lastPages = new(StringComparer.OrdinalIgnoreCase);
     private bool _rememberLastPage;
+    private ReadingAnchor? _resizeAnchor;
+    private bool _restoringLayoutAnchor;
 
     public MainWindow(string? startupPath = null)
     {
@@ -81,7 +83,10 @@ public partial class MainWindow : Window
         _resizeTimer.Tick += async (_, _) =>
         {
             _resizeTimer.Stop();
-            await RenderDocumentAsync(showLoading: false);
+            var anchor = _resizeAnchor ?? CaptureTopAnchor();
+            await RenderDocumentAsync(showLoading: false, anchor);
+            RestoreTopAnchor(anchor);
+            _resizeAnchor = null;
         };
         if (!string.IsNullOrWhiteSpace(startupPath))
         {
@@ -171,6 +176,20 @@ public partial class MainWindow : Window
         }
     }
 
+    internal bool TryOpenExternalPdf(string path)
+    {
+        if (_currentPath is not null || !IsPdf(path)) return false;
+
+        OpenPdf(path);
+        if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+        if (!IsVisible) Show();
+        Activate();
+        Topmost = true;
+        Topmost = false;
+        Focus();
+        return true;
+    }
+
     private static PdfDocument OpenPdfPig(string path, string? password) => string.IsNullOrEmpty(password)
         ? PdfDocument.Open(path)
         : PdfDocument.Open(path, new ParsingOptions { Password = password });
@@ -254,7 +273,7 @@ public partial class MainWindow : Window
         UpdatePageControls();
     }
 
-    private async Task RenderDocumentAsync(bool showLoading = true)
+    private async Task RenderDocumentAsync(bool showLoading = true, ReadingAnchor? readingAnchor = null)
     {
         if (_currentPath is null || _totalPages < 1 || !File.Exists(_currentPath)) return;
 
@@ -269,11 +288,11 @@ public partial class MainWindow : Window
         {
             EnsurePageSurfaces();
             var firstIndex = Math.Clamp(_currentPage - 1, 0, _totalPages - 1);
-            // Position the lightweight page surfaces before revealing any bitmap.
-            // This prevents page 1 from flashing while the remembered page renders.
             PagesPanel.UpdateLayout();
-            ScrollToPage(firstIndex + 1);
+            if (readingAnchor is { } anchor) RestoreTopAnchor(anchor);
+            else ScrollToPage(firstIndex + 1);
             if (!await RenderPageImageAsync(path, firstIndex, pixelWidth, requestVersion)) return;
+            if (readingAnchor is { } renderedAnchor) RestoreTopAnchor(renderedAnchor);
             _currentPage = firstIndex + 1;
             LoadingOverlay.Visibility = Visibility.Collapsed;
             EmptyState.Visibility = Visibility.Collapsed;
@@ -317,9 +336,24 @@ public partial class MainWindow : Window
             var selectionLayer = new Canvas { Background = Brushes.Transparent };
             var initialRatio = _rotation % 2 == 0 ? _pageAspectRatio : 1 / _pageAspectRatio;
             var surface = new Grid { Width = width, Height = width / initialRatio,
-                Background = Brushes.Transparent, Margin = new Thickness(0, 0, 0, 2) };
+                Background = Brushes.Transparent,
+                // Preserve the original 2-DIP page spacing; only its visual color changes.
+                Margin = index < _totalPages - 1 ? new Thickness(0, 0, 0, 2) : new Thickness(0) };
             surface.Children.Add(pageImage);
             surface.Children.Add(selectionLayer);
+            if (index < _totalPages - 1)
+            {
+                var separator = new Rectangle
+                {
+                    Height = 2,
+                    VerticalAlignment = VerticalAlignment.Bottom,
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    IsHitTestVisible = false
+                };
+                separator.SetResourceReference(Rectangle.FillProperty, "WpfUi.BorderStrong");
+                Panel.SetZIndex(separator, 2);
+                surface.Children.Add(separator);
+            }
             _displayedPages.Add(null);
             _pageText.Add(null);
             _pageImages.Add(pageImage);
@@ -344,7 +378,24 @@ public partial class MainWindow : Window
         _displayedPages[pageIndex] = displayed;
         _pageImages[pageIndex].Source = displayed;
         if (PagesPanel.Children[pageIndex] is Grid surface)
-            surface.Height = surface.Width * displayed.PixelHeight / displayed.PixelWidth;
+        {
+            var anchor = CaptureTopAnchor();
+            var newHeight = surface.Width * displayed.PixelHeight / displayed.PixelWidth;
+            if (Math.Abs(surface.Height - newHeight) >= 0.1)
+            {
+                _restoringLayoutAnchor = true;
+                try
+                {
+                    surface.Height = newHeight;
+                    PagesPanel.UpdateLayout();
+                    RestoreTopAnchor(anchor);
+                }
+                finally
+                {
+                    _restoringLayoutAnchor = false;
+                }
+            }
+        }
         if (pageIndex == _currentPage - 1) _displayedPage = displayed;
         return true;
     }
@@ -491,9 +542,18 @@ public partial class MainWindow : Window
 
     private void DocumentViewport_SizeChanged(object sender, SizeChangedEventArgs e)
     {
+        var widthChanged = Math.Abs(e.NewSize.Width - e.PreviousSize.Width) >= 1;
+        if (widthChanged && PagesPanel.Children.Count > 0)
+            _resizeAnchor ??= CaptureTopAnchor();
         UpdateDisplayedPageWidths(Math.Max(1, e.NewSize.Width) * _zoomFactor);
+        PagesPanel.UpdateLayout();
+        if (_resizeAnchor is { } immediateAnchor) RestoreTopAnchor(immediateAnchor);
         Dispatcher.BeginInvoke(DispatcherPriority.Render, () =>
-            UpdateDisplayedPageWidths(Math.Max(1, DocumentViewport.ViewportWidth) * _zoomFactor));
+        {
+            UpdateDisplayedPageWidths(Math.Max(1, DocumentViewport.ViewportWidth) * _zoomFactor);
+            PagesPanel.UpdateLayout();
+            if (_resizeAnchor is { } renderAnchor) RestoreTopAnchor(renderAnchor);
+        });
         if (_currentPath is null || Math.Abs(e.NewSize.Width - e.PreviousSize.Width) < 12) return;
         _resizeTimer.Stop();
         _resizeTimer.Start();
@@ -516,7 +576,7 @@ public partial class MainWindow : Window
 
     private void DocumentViewport_ScrollChanged(object sender, System.Windows.Controls.ScrollChangedEventArgs e)
     {
-        if (PagesPanel.Children.Count == 0) return;
+        if (_restoringLayoutAnchor || PagesPanel.Children.Count == 0) return;
         var visiblePage = GetVisiblePage();
         if (_currentPage == visiblePage) return;
         _currentPage = visiblePage;
@@ -541,6 +601,36 @@ public partial class MainWindow : Window
             visiblePage = index + 1;
         }
         return visiblePage;
+    }
+
+    private ReadingAnchor CaptureTopAnchor()
+    {
+        if (PagesPanel.Children.Count == 0) return new ReadingAnchor(0, 0);
+        var offset = DocumentViewport.VerticalOffset;
+        double top = 0;
+        for (var index = 0; index < PagesPanel.Children.Count; index++)
+        {
+            if (PagesPanel.Children[index] is not FrameworkElement page) continue;
+            var pageHeight = Math.Max(1, page.ActualHeight);
+            var extent = pageHeight + page.Margin.Top + page.Margin.Bottom;
+            if (offset < top + extent)
+                return new ReadingAnchor(index, Math.Clamp((offset - top) / pageHeight, 0, 1));
+            top += extent;
+        }
+        return new ReadingAnchor(PagesPanel.Children.Count - 1, 1);
+    }
+
+    private void RestoreTopAnchor(ReadingAnchor anchor)
+    {
+        if (PagesPanel.Children.Count == 0) return;
+        var pageIndex = Math.Clamp(anchor.PageIndex, 0, PagesPanel.Children.Count - 1);
+        double top = 0;
+        for (var index = 0; index < pageIndex; index++)
+            if (PagesPanel.Children[index] is FrameworkElement preceding)
+                top += preceding.ActualHeight + preceding.Margin.Top + preceding.Margin.Bottom;
+        if (PagesPanel.Children[pageIndex] is FrameworkElement page)
+            top += Math.Clamp(anchor.Fraction, 0, 1) * Math.Max(1, page.ActualHeight);
+        DocumentViewport.ScrollToVerticalOffset(top);
     }
 
     private void ScrollToPage(int pageNumber)
@@ -941,6 +1031,10 @@ public partial class MainWindow : Window
 
     private void ShowEmptyReader()
     {
+        var closingPath = _currentPath;
+        RememberCurrentPage();
+        ++_openRequestVersion;
+        ++_renderRequestVersion;
         _currentPath = null;
         _currentPage = 0;
         _totalPages = 0;
@@ -950,6 +1044,9 @@ public partial class MainWindow : Window
         _isInternetDocument = false;
         PagesPanel.Children.Clear();
         _displayedPages.Clear();
+        _pageText.Clear();
+        _pageImages.Clear();
+        _selectionLayers.Clear();
         DocumentTitle.Text = "Lector PDF";
         Title = "Lector PDF";
         EmptyStateTitle.Text = "Abre un documento PDF";
@@ -957,6 +1054,11 @@ public partial class MainWindow : Window
         EmptyStateAction.Content = "Seleccionar un PDF";
         EmptyState.Visibility = Visibility.Visible;
         LoadingOverlay.Visibility = Visibility.Collapsed;
+        StatusText.Text = "Listo";
+        if (closingPath is not null && File.Exists(closingPath))
+            AddRecentFile(closingPath);
+        else
+            RebuildRecentFilesMenu();
         UpdatePageControls();
     }
 
@@ -986,7 +1088,9 @@ public partial class MainWindow : Window
     private void RebuildRecentFilesMenu()
     {
         RecentFilesMenu.Items.Clear();
-        foreach (var path in _recentFiles.Where(File.Exists))
+        RecentFilesPanel.Children.Clear();
+        var validPaths = _recentFiles.Where(File.Exists).ToArray();
+        foreach (var path in validPaths)
         {
             var item = new MenuItem { Header = Path.GetFileName(path), ToolTip = path, Tag = path };
             item.Click += (_, _) => OpenPdf((string)item.Tag);
@@ -1001,6 +1105,49 @@ public partial class MainWindow : Window
             clear.Click += (_, _) => { _recentFiles.Clear(); RebuildRecentFilesMenu(); };
             RecentFilesMenu.Items.Add(clear);
         }
+
+        foreach (var path in validPaths.Take(5))
+        {
+            var labels = new StackPanel { HorizontalAlignment = HorizontalAlignment.Left };
+            labels.Children.Add(new TextBlock
+            {
+                Text = Path.GetFileName(path),
+                FontSize = 12,
+                TextAlignment = TextAlignment.Left,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            });
+            var location = new TextBlock
+            {
+                Text = Path.GetDirectoryName(path) ?? path,
+                FontSize = 10,
+                Margin = new Thickness(0, 2, 0, 0),
+                TextAlignment = TextAlignment.Left,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
+            location.SetResourceReference(TextBlock.ForegroundProperty, "WpfUi.TextMuted");
+            labels.Children.Add(location);
+
+            var recentButton = new Button
+            {
+                Style = (Style)FindResource("RecentFileButtonStyle"),
+                Content = labels,
+                Tag = path,
+                ToolTip = path,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(8, 5, 8, 5),
+                MinHeight = 42,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left
+            };
+            System.Windows.Automation.AutomationProperties.SetName(recentButton,
+                $"Abrir recientemente: {Path.GetFileName(path)}");
+            recentButton.Click += (_, _) => OpenPdf((string)recentButton.Tag);
+            RecentFilesPanel.Children.Add(recentButton);
+        }
+        RecentFilesSection.Visibility = RecentFilesPanel.Children.Count > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private string? PromptForPassword(string fileName)
@@ -1244,6 +1391,7 @@ public partial class MainWindow : Window
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (_isFullscreen && e.Key == Key.Escape) { ExitFullscreen(); e.Handled = true; }
+        else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.W) { CloseDocumentOrWindow(); e.Handled = true; }
         else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.C && _selectionPage >= 0) { CopySelectedText(); e.Handled = true; }
         else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.N) { LaunchNewInstance(); e.Handled = true; }
         else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.O) { OpenButton_Click(this, new RoutedEventArgs()); e.Handled = true; }
@@ -1285,7 +1433,7 @@ public partial class MainWindow : Window
     }
 
     private void ShortcutsMenuItem_Click(object sender, RoutedEventArgs e) => ReaderDialog.Show(this,
-        "Ctrl+N       Nueva ventana\nCtrl+O       Abrir un PDF\nCtrl+S       Guardar PDF de Internet en Documentos\nCtrl+Shift+S Guardar una copia\nCtrl+F       Buscar texto\nCtrl+P       Imprimir\nCtrl++/-     Zoom\nCtrl+0       Ajustar al ancho\nCtrl+RePág   PDF anterior\nCtrl+AvPág   PDF siguiente\nRePág/AvPág  Página anterior/siguiente (configurable)\nCtrl+rueda   Zoom",
+        "Ctrl+N       Nueva ventana\nCtrl+W       Cerrar ventana\nCtrl+O       Abrir un PDF\nCtrl+S       Guardar PDF de Internet en Documentos\nCtrl+Shift+S Guardar una copia\nCtrl+F       Buscar texto\nCtrl+P       Imprimir\nCtrl++/-     Zoom\nCtrl+0       Ajustar al ancho\nCtrl+RePág   PDF anterior\nCtrl+AvPág   PDF siguiente\nRePág/AvPág  Página anterior/siguiente (configurable)\nCtrl+rueda   Zoom",
         "Atajos de teclado");
 
     private void TitleRegion_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -1303,7 +1451,28 @@ public partial class MainWindow : Window
     private void MinimizeButton_Click(object sender, RoutedEventArgs e) => SystemCommands.MinimizeWindow(this);
     private void MaximizeRestoreButton_Click(object sender, RoutedEventArgs e) => ToggleMaximizeRestore();
     private void CloseButton_Click(object sender, RoutedEventArgs e) => SystemCommands.CloseWindow(this);
-    private void ExitMenuItem_Click(object sender, RoutedEventArgs e) => Close();
+    private void CloseDocumentMenuItem_Click(object sender, RoutedEventArgs e) => CloseDocumentOrWindow();
+
+    private void CloseDocumentOrWindow()
+    {
+        var processName = Process.GetCurrentProcess().ProcessName;
+        var instances = Process.GetProcessesByName(processName);
+        try
+        {
+            if (instances.Length > 1)
+            {
+                Close();
+                return;
+            }
+        }
+        finally
+        {
+            foreach (var instance in instances) instance.Dispose();
+        }
+
+        if (_currentPath is not null) ShowEmptyReader();
+        else StatusText.Text = "Listo";
+    }
     private void ToggleMaximizeRestore() => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
     private void ToggleFullscreen()
@@ -1428,3 +1597,4 @@ public sealed record WindowSettings(double Width, bool? ShowVerticalScrollBar = 
     IReadOnlyDictionary<string, int>? LastPages = null, bool RememberLastPage = false);
 public sealed record TextWord(string Text, double Left, double Bottom, double Width, double Height);
 public sealed record PageTextData(double Width, double Height, IReadOnlyList<TextWord> Words);
+public readonly record struct ReadingAnchor(int PageIndex, double Fraction);

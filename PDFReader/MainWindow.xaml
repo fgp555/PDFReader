@@ -10,6 +10,35 @@
         <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="6" CornerRadius="8"
                             GlassFrameThickness="0" UseAeroCaptionButtons="False" />
     </shell:WindowChrome.WindowChrome>
+    <Window.Resources>
+        <Style x:Key="RecentFileButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Surface" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Surface" Property="Background" Value="{DynamicResource WpfUi.ControlHover}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Surface" Property="Background" Value="{DynamicResource WpfUi.ControlPressed}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource WpfUi.Focus}" />
+                                <Setter TargetName="Surface" Property="BorderThickness" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition x:Name="TitleBarRow" Height="40" />
@@ -35,7 +64,7 @@
                         <MenuItem Header="Mostrar en el _Explorador" Click="ShowInExplorerMenuItem_Click" />
                         <MenuItem Header="_Propiedades" Click="PropertiesMenuItem_Click" />
                         <MenuItem Header="_Configuración…" Click="SettingsMenuItem_Click" />
-                        <Separator /><MenuItem Header="_Salir" Click="ExitMenuItem_Click" />
+                        <Separator /><MenuItem Header="_Cerrar" InputGestureText="Ctrl+W" Click="CloseDocumentMenuItem_Click" />
                     </MenuItem>
                     <MenuItem Header="_Ver">
                         <MenuItem Header="PDF _anterior" InputGestureText="Ctrl+Page Up" Click="PreviousPdfButton_Click" />
@@ -123,25 +152,77 @@
                 </ScrollViewer.Template>
                 <ScrollViewer.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="_Copiar texto" InputGestureText="Ctrl+C" Click="CopySelectedTextMenuItem_Click" />
+                        <ContextMenu.Resources>
+                            <Style x:Key="TextOnlyContextMenuItem" TargetType="MenuItem">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="Foreground" Value="{DynamicResource WpfUi.Text}" />
+                                <Setter Property="Padding" Value="10,6" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="MenuItem">
+                                            <Border x:Name="Surface" Background="{TemplateBinding Background}"
+                                                    CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <ContentPresenter ContentSource="Header" RecognizesAccessKey="True"
+                                                                      VerticalAlignment="Center" />
+                                                    <TextBlock Grid.Column="1" Text="{TemplateBinding InputGestureText}"
+                                                               Foreground="{DynamicResource WpfUi.TextMuted}"
+                                                               Margin="24,0,0,0" VerticalAlignment="Center" />
+                                                </Grid>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsHighlighted" Value="True">
+                                                    <Setter TargetName="Surface" Property="Background"
+                                                            Value="{DynamicResource WpfUi.ControlHover}" />
+                                                </Trigger>
+                                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                                    <Setter TargetName="Surface" Property="BorderBrush"
+                                                            Value="{DynamicResource WpfUi.Focus}" />
+                                                    <Setter TargetName="Surface" Property="BorderThickness" Value="1" />
+                                                </Trigger>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Opacity" Value="0.4" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ContextMenu.Resources>
+                        <MenuItem Header="_Copiar texto" InputGestureText="Ctrl+C"
+                                  Style="{StaticResource TextOnlyContextMenuItem}"
+                                  Click="CopySelectedTextMenuItem_Click" />
                     </ContextMenu>
                 </ScrollViewer.ContextMenu>
                 <StackPanel x:Name="PagesPanel" VerticalAlignment="Top" />
             </ScrollViewer>
             <Grid x:Name="EmptyState" Background="{DynamicResource WpfUi.Workspace}">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="390" Margin="24">
-                    <Border Width="62" Height="68" CornerRadius="5" BorderBrush="{DynamicResource WpfUi.BorderStrong}"
-                            BorderThickness="1" HorizontalAlignment="Center" Margin="0,0,0,18">
-                        <TextBlock Text="PDF" Foreground="{DynamicResource PdfAccentBrush}" FontSize="15" FontWeight="Bold"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <TextBlock x:Name="EmptyStateTitle" Text="Abre un documento PDF" FontSize="22" FontWeight="SemiBold" TextAlignment="Center" />
-                    <TextBlock x:Name="EmptyStateDescription"
-                               Text="Selecciona un archivo o arrastra un PDF para abrirlo aquí."
-                               FontSize="13" Style="{StaticResource WpfUi.SecondaryText}" TextAlignment="Center"
-                               TextWrapping="Wrap" Margin="0,8,0,20" />
-                    <Button x:Name="EmptyStateAction" Style="{StaticResource WpfUi.PrimaryButton}" Content="Seleccionar un PDF"
-                            HorizontalAlignment="Center" Click="OpenButton_Click" AutomationProperties.Name="Seleccionar un archivo PDF" />
+                <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="24">
+                    <StackPanel HorizontalAlignment="Center" Width="390">
+                        <Border Width="62" Height="68" CornerRadius="5" BorderBrush="{DynamicResource WpfUi.BorderStrong}"
+                                BorderThickness="1" HorizontalAlignment="Center" Margin="0,0,0,18">
+                            <TextBlock Text="PDF" Foreground="{DynamicResource PdfAccentBrush}" FontSize="15" FontWeight="Bold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock x:Name="EmptyStateTitle" Text="Abre un documento PDF" FontSize="22" FontWeight="SemiBold" TextAlignment="Center" />
+                        <TextBlock x:Name="EmptyStateDescription"
+                                   Text="Selecciona un archivo o arrastra un PDF para abrirlo aquí."
+                                   FontSize="13" Style="{StaticResource WpfUi.SecondaryText}" TextAlignment="Center"
+                                   TextWrapping="Wrap" Margin="0,8,0,20" />
+                        <Button x:Name="EmptyStateAction" Style="{StaticResource WpfUi.PrimaryButton}" Content="Seleccionar un PDF"
+                                HorizontalAlignment="Center" Click="OpenButton_Click" AutomationProperties.Name="Seleccionar un archivo PDF" />
+                    </StackPanel>
+                    <StackPanel x:Name="RecentFilesSection" Visibility="Collapsed" Width="390"
+                                HorizontalAlignment="Center" Margin="0,26,0,0">
+                        <Border Height="1" Background="{DynamicResource WpfUi.Border}" Margin="0,0,0,14" />
+                        <TextBlock Text="Abiertos recientemente" FontSize="12" FontWeight="SemiBold"
+                                   Style="{StaticResource WpfUi.SecondaryText}" Margin="8,0,8,6" />
+                        <StackPanel x:Name="RecentFilesPanel" />
+                    </StackPanel>
                 </StackPanel>
             </Grid>
             <Border x:Name="LoadingOverlay" Visibility="Collapsed" Background="#E6191B1C">
